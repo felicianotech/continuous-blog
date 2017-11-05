@@ -1,0 +1,23 @@
+workflows:
+  version: 2
+  main:
+    jobs:
+      - build
+
+version: 2
+jobs:
+  build:
+    docker:
+      - image: cibuilds/drupal:latest
+    working_directory: /project/app
+    steps:
+      - checkout:
+          path: /project
+      - run:
+          name: "Install Dependencies"
+          command: |
+            ls -lah
+            composer install
+      - run:
+          name: "Behat Tests"
+          command: vendor/bin/behat
