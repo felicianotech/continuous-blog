@@ -9,14 +9,25 @@ jobs:
   build:
     docker:
       - image: cibuilds/drupal:latest
+      - image: mariadb:10.2
+        environment:
+          MYSQL_DATABASE: drupal
+          MYSQL_ROOT_PASSWORD: AppleSucks
+          MYSQL_ROOT_HOST: "%"
     working_directory: /project/app
     steps:
       - checkout:
           path: /project
       - run:
+          name: "Setup Database & Server"
+          command: |
+            echo "127.0.0.1      db" >> /etc/hosts
+            sleep 20
+            mysql -uroot -pAppleSucks -h127.0.0.1 drupal < ../db/drupal-db-dump.sql
+            service apache2 start
+      - run:
           name: "Install Dependencies"
           command: |
-            ls -lah
             composer install
       - run:
           name: "Behat Tests"
