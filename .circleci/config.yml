@@ -54,7 +54,7 @@ jobs:
       - run: |
           cd /project/app
           docker login -u  $DOCKER_USER -p $DOCKER_PASS
-          docker build -t felicianotech/continuous-blog:latest ..
+          docker build -f Dockerfile.prod -t felicianotech/continuous-blog:latest .
           docker push felicianotech/continuous-blog:latest
           bx login --apikey $BLUEMIX_API_KEY -a api.ng.bluemix.net -o $BLUEMIX_ORG -s $BLUEMIX_SPACE
           eval "$(bx cs cluster-config main-cluster --export)"
