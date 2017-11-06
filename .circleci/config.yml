@@ -3,9 +3,13 @@ workflows:
   main:
     jobs:
       - build
+      - deploy:
+          requires:
+            - build
 
 version: 2
 jobs:
+
   build:
     docker:
       - image: cibuilds/drupal:latest
@@ -32,3 +36,27 @@ jobs:
       - run:
           name: "Behat Tests"
           command: vendor/bin/behat
+      - persist_to_workspace:
+          root: /
+          paths:
+            - project
+  
+  deploy:
+    docker:
+      - image: cibuilds/bluemix:latest
+    environment:
+      BLUEMIX_ORG: CircleCI
+      BLUEMIX_SPACE: dev
+    steps:
+      - attach_workspace:
+          at: /
+      - setup_remote_docker
+      - run: |
+          cd /project/app
+          docker login -u  $DOCKER_USER -p $DOCKER_PASS
+          docker build -t felicianotech/continuous-blog:latest ..
+          docker push felicianotech/continuous-blog:latest
+          bx login --apikey $BLUEMIX_API_KEY -a api.ng.bluemix.net -o $BLUEMIX_ORG -s $BLUEMIX_SPACE
+          eval "$(bx cs cluster-config main-cluster --export)"
+          kubectl apply -f ../k8s/drupal-deployment.yml
+          ls -lah /project
